@@ -1,0 +1,17 @@
+[
+    {
+        "ParameterKey" : "ProjectName",
+        "ParameterValue" : "WebApp-DEV"
+
+    },
+    
+    {
+        "ParameterKey" : "AmiId",
+        "ParameterValue" : "ami-0e5599794d252b611"
+    },
+
+    {
+        "ParameterKey" : "InstanceType",
+        "ParameterValue" : "a1.large"
+    }
+]
