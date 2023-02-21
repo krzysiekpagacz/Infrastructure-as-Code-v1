@@ -256,3 +256,12 @@ Outputs:
     Value: !Ref PrivateRouteTable2
     Export:
       Name: !Sub ${ProjectName}-PRIV-RT2
+
+  VpcCidrBlock:
+    Description: Main VPC's CIDR block.
+    Value:
+      Fn::GetAtt:
+        - MainVpc
+        - CidrBlock
+    Export:
+      Name: MainVpcCidrBlock
