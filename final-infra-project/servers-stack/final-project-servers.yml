@@ -82,8 +82,7 @@ Resources:
       - IpProtocol: tcp
         FromPort: 80
         ToPort: 80
-        CidrIp:
-          Fn::ImportValue: MainVpcCidrBlock
+        CidrIp: 0.0.0.0/0
 
   WebServerSecGroup:
     Type: AWS::EC2::SecurityGroup
@@ -96,25 +95,22 @@ Resources:
       - IpProtocol: tcp
         FromPort: 80
         ToPort: 80
-        CidrIp:
-          Fn::ImportValue: MainVpcCidrBlock
+        CidrIp: 0.0.0.0/0
       - IpProtocol: tcp
         FromPort: 22
         ToPort: 22
-        CidrIp:
-          Fn::ImportValue: MainVpcCidrBlock
+        CidrIp: 0.0.0.0/0
       SecurityGroupEgress:
       - IpProtocol: tcp
         FromPort: 0
         ToPort: 65535
-        CidrIp:
-          Fn::ImportValue: MainVpcCidrBlock
+        CidrIp: 0.0.0.0/0
 
   WebAppLaunchConfig:
     Type: AWS::AutoScaling::LaunchConfiguration
     Properties:
       SecurityGroups:
-      - !Ref WebServerSecGroup
+      - Ref: WebServerSecGroup
       UserData:
         Fn::Base64: !Sub |
           #!/bin/bash
@@ -122,7 +118,7 @@ Resources:
           apt-get install apache2 -y
           systemctl start apache2.service
           cd /var/www/html
-          echo "Udacity Demo Web Server Up and Running!" > index.html      
+          echo "it works! Udagram, Udacity" > index.html      
       ImageId: !Sub ${AmiId}
       IamInstanceProfile: !Ref ProfileWithRolesForOurApp
       KeyName: !Ref WebAppKeyPair
@@ -153,14 +149,17 @@ Resources:
           !Sub ${ProjectName}-PRIV-SUBNET2
       LaunchConfigurationName:
         Ref: WebAppLaunchConfig
-      MinSize: 3
-      MaxSize: 5
+      MinSize: 2
+      MaxSize: 2
       TargetGroupARNs:
       - Ref: WebAppTargetGroup
 
   WebAppLB:
     Type: AWS::ElasticLoadBalancingV2::LoadBalancer
     Properties:
+      Scheme: internet-facing
+      Type: application
+      IpAddressType: ipv4
       Subnets:
       - Fn::ImportValue:
           !Sub ${ProjectName}-PUB-SUBNET1
@@ -173,12 +172,10 @@ Resources:
     Type: AWS::ElasticLoadBalancingV2::Listener
     Properties:
       DefaultActions:
-      - Type: forward
-        TargetGroupArn:
-          Ref: WebAppTargetGroup
-      LoadBalancerArn:
-        Ref: WebAppLB
-      Port: 80
+        - Type: forward
+          TargetGroupArn: !Ref WebAppTargetGroup
+      LoadBalancerArn: !Ref WebAppLB
+      Port: '80'
       Protocol: HTTP
 
   ALBListenerRule:
@@ -201,6 +198,7 @@ Resources:
       HealthCheckProtocol: HTTP
       HealthCheckTimeoutSeconds: 8
       HealthyThresholdCount: 2
+      # TargetType: instance
       Port: 80
       Protocol: HTTP
       UnhealthyThresholdCount: 5
